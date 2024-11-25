@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<!--Made with ❤ by XUANZHI-->
+<!--该页面已接入百度统计-->
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="theme-color" content="#e9f1e9">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>楼川弈</title>
+  <!-- Bootstrap -->
+  <link href="https://unpkg.zhimg.com/bootstrap@4.4.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="icon" href="./logo.png">
+  <style>
+    #mainMenu {
+      background-color: #eeeeee;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 110%;
+    }
+
+    #logo {
+      border-radius: 50%;
+    }
+
+    #web {
+      position: fixed;
+      top: 0px;
+      left: 0px;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+    }
+
+    .v-leave-active,
+    .v-enter-active {
+      transition: all 0.3s;
+    }
+
+    .v-enter-from {
+      transform: translateX(-50px);
+      opacity: 0;
+    }
+
+    .v-leave-to {
+      opacity: 0;
+    }
+  </style>
+  <script>
+    var _hmt = _hmt || [];
+    (function () {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?76d748872de14bad7ef88266420d87e4";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <div id="mainMenu" class="mt-5">
+      <main-menu></main-menu>
+    </div>
+  </div>
+
+
+  <template id="menu">
+    <img src="./logo.png" alt="lcy" width="25px" id="logo"> <strong>楼川弈</strong> &nbsp;
+    <transition mode="out-in">
+      <span v-if="!isLogin">
+        <a href="https://api.xuanzhi33.cn/v1/usersystem/?appname=louchuanyi.link&from=https://louchuanyi.link">
+          <i class="fa fa-sign-in" aria-hidden="true"></i>
+          登录
+        </a>
+      </span>
+      <span v-else>
+        <i class="fa fa-user" aria-hidden="true"></i> {{ username }}
+        &nbsp;
+        <a href="javascript:;" @click="logout">
+          <i class="fa fa-sign-out" aria-hidden="true"></i>
+        </a>
+        <span v-if="isAdmin">
+          &nbsp;
+          <a href="./admin.php">
+            <i class="fa fa-cog" aria-hidden="true"></i>
+          </a>
+        </span>
+      </span>
+    </transition>
+    &nbsp;
+    <div id="urls" class="mt-2">
+      <strong>链接</strong>&nbsp;
+      <transition>
+        <span v-if="!urls" class="badge badge-secondary">
+          <span class="spinner-border spinner-border-sm"></span>
+        </span>
+      </transition>
+      <br>
+      <transition>
+        <div v-if="urls">
+          <template v-for="url in urls">
+            <a :href="url.url" target="_blank">{{ url.name }}</a><br>
+          </template>
+        </div>
+      </transition>
+    </div>
+  </template>
+  <script>
+    const urlParam = name => {
+      const serchParams = new URLSearchParams(window.location.search);
+      return serchParams.get(name);
+    }
+
+    if (urlParam("username")) {
+      document.cookie = "lcy_user=" + urlParam("username") + "; expires=Thu, 01 Jan 2025 00:00:00 GMT";
+      document.cookie = "lcy_token=" + urlParam("usertoken") + "; expires=Thu, 01 Jan 2025 00:00:00 GMT";
+
+      history.replaceState(null, "", location.href.split("?")[0]);
+    }
+  </script>
+  <script src="https://www.xuanzhi33.cn/js/global.v2.js" data-user="lcy_user"></script>
+  <script type="module">
+    import { createApp } from "https://unpkg.zhimg.com/vue@3/dist/vue.esm-browser.prod.js";
+    let { username } = xuanzhi33;
+    const delCookie = name => {
+      document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    }
+
+    const menu = {
+      data() {
+        return {
+          isLogin: false,
+          username,
+          urls: null
+        }
+      },
+      computed: {
+        isAdmin() {
+          const admins = ["xuanzhi33", "clhy"]
+          return admins.includes(this.username);
+        }
+      },
+      methods: {
+        logout() {
+          delCookie("lcy_user");
+          delCookie("lcy_token");
+          this.isLogin = false;
+          this.username = "";
+        },
+        async getUrls() {
+          const nowTimeStamp = new Date().getTime();
+          const res = await fetch("./url.json?" + nowTimeStamp);
+          this.urls = await res.json();
+        }
+      },
+      async mounted() {
+        if (this.username) {
+          this.isLogin = true;
+        }
+        await this.getUrls();
+      },
+      template: "#menu"
+    }
+
+    createApp({
+      components: {
+        mainMenu: menu
+      }
+    }).mount("#mainMenu");
+
+
+  </script>
+
+</body>
+
+</html>
